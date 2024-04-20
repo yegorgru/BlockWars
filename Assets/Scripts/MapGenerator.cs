@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEngine;
 using static Unity.Collections.AllocatorManager;
 using UnityEngine.UIElements;
+using static UnityEngine.Rendering.DebugUI.Table;
 
 [System.Serializable]
 public class BlockType
@@ -33,20 +34,65 @@ public class MapGenerator : MonoBehaviour
     public float blockSize = 1f;
     public float glassChance = 0.2f;
     public GameObject character;
+    public GameObject bullet;
+    private int xCoord = 0;
+    private int yCoord = 0;
+    private GameObject characterObject;
+    private List<List<GridCell>> logicalGrid;
 
     void Start()
     {
+        yCoord = rows / 2;
         GenerateGrid();
     }
 
     void Update()
     {
-        
+        int prevXCoord = xCoord;
+        int prevYCoord = yCoord;
+        if (Input.GetKeyDown(KeyCode.UpArrow) == true)
+        {
+            ++yCoord;
+        }
+        if (Input.GetKeyDown(KeyCode.DownArrow) == true)
+        {
+            --yCoord;
+        }
+        if (Input.GetKeyDown(KeyCode.LeftArrow) == true)
+        {
+            --xCoord;
+        }
+        if (Input.GetKeyDown(KeyCode.RightArrow) == true)
+        {
+            ++xCoord;
+        }
+        if (!(xCoord >= 0 && xCoord < cols && yCoord >= 0 && yCoord < rows && logicalGrid[yCoord][xCoord] == GridCell.Empty))
+        {
+            xCoord = prevXCoord;
+            yCoord = prevYCoord;
+        }
+        else
+        {
+            logicalGrid[yCoord][xCoord] = GridCell.Hero;
+            logicalGrid[prevYCoord][prevXCoord] = GridCell.Empty;
+            characterObject.transform.position = transform.position + new Vector3((xCoord + 0.5f) * blockSize, (yCoord + 0.5f) * blockSize, 0f);
+        }
+        Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        mousePos.z = 0f;
+        Vector3 direction = mousePos - characterObject.transform.position;
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        Quaternion rotation = Quaternion.AngleAxis(angle, Vector3.forward);
+        characterObject.transform.rotation = rotation;
+        if (Input.GetKeyDown(KeyCode.Space) == true)
+        {
+            print("asdfsdf");
+            Instantiate(bullet, characterObject.transform.position, characterObject.transform.rotation * Quaternion.Euler(0, 0, -90));
+        }
     }
 
     void GenerateGrid()
     {
-        List<List<GridCell>> logicalGrid = GenerateLogicalGrid();
+        logicalGrid = GenerateLogicalGrid();
         
         for (int row = 0; row < logicalGrid.Count; row++)
         {
@@ -76,6 +122,10 @@ public class MapGenerator : MonoBehaviour
                 Vector3 position = new Vector3((col + 0.5f) * blockSize, (row + 0.5f) * blockSize, 0f);
                 GameObject newBlock = Instantiate(prefab, transform.position + position, Quaternion.identity, this.transform);
                 newBlock.transform.parent = transform;
+                if (logicalGrid[row][col] == GridCell.Hero)
+                {
+                    characterObject = newBlock;
+                }
             }
         }
     }

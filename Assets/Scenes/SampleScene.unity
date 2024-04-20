@@ -159,8 +159,11 @@ MonoBehaviour:
   - prefab: {fileID: 3021184456403022683, guid: 28bad7708f8b3c94984f1d6a94abbeaa, type: 3}
   rows: 15
   cols: 32
+  paths: 1
   blockSize: 0.665
-  character: {fileID: 7528252448118849142, guid: fba6bcd9f1d2c864eb642794375ccca9, type: 3}
+  glassChance: 0.05
+  character: {fileID: 3592922764265108339, guid: fba6bcd9f1d2c864eb642794375ccca9, type: 3}
+  bullet: {fileID: 7655854846278513336, guid: c726ea1daea0ec049b94a7da47c0a91e, type: 3}
 --- !u!4 &133934946
 Transform:
   m_ObjectHideFlags: 0
@@ -473,7 +476,7 @@ Transform:
   m_GameObject: {fileID: 1338782763}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.14, y: 0.0597, z: 0}
+  m_LocalPosition: {x: 0.14, y: 0.0597, z: 1}
   m_LocalScale: {x: 21.995222, y: 10.297768, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
