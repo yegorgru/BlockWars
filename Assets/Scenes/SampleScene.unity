@@ -159,10 +159,11 @@ MonoBehaviour:
   - prefab: {fileID: 3021184456403022683, guid: 28bad7708f8b3c94984f1d6a94abbeaa, type: 3}
   rows: 15
   cols: 32
-  paths: 1
+  paths: 5
   blockSize: 0.665
-  glassChance: 0.05
-  character: {fileID: 3592922764265108339, guid: fba6bcd9f1d2c864eb642794375ccca9, type: 3}
+  glassChanceBoost: 0.3
+  character: {fileID: 3592922764265108339, guid: 330bd6ac938602f41b2e84978a1b6a9b, type: 3}
+  enemy: {fileID: 3592922764265108339, guid: fba6bcd9f1d2c864eb642794375ccca9, type: 3}
   bullet: {fileID: 7655854846278513336, guid: c726ea1daea0ec049b94a7da47c0a91e, type: 3}
 --- !u!4 &133934946
 Transform:

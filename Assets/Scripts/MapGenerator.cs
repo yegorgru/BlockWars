@@ -32,8 +32,9 @@ public class MapGenerator : MonoBehaviour
     public int cols = 10;
     public int paths = 1;
     public float blockSize = 1f;
-    public float glassChance = 0.2f;
+    public float glassChanceBoost = 0.2f;
     public GameObject character;
+    public GameObject enemy;
     public GameObject bullet;
     private int xCoord = 0;
     private int yCoord = 0;
@@ -85,7 +86,6 @@ public class MapGenerator : MonoBehaviour
         characterObject.transform.rotation = rotation;
         if (Input.GetKeyDown(KeyCode.Space) == true)
         {
-            print("asdfsdf");
             Instantiate(bullet, characterObject.transform.position, characterObject.transform.rotation * Quaternion.Euler(0, 0, -90));
         }
     }
@@ -118,13 +118,21 @@ public class MapGenerator : MonoBehaviour
                 else if (logicalGrid[row][col] == GridCell.Grass)
                 {
                     prefab = blockTypes[3].prefab;
-                } 
+                }
+                else if (logicalGrid[row][col] == GridCell.Enemy)
+                {
+                    prefab = enemy;
+                }
                 Vector3 position = new Vector3((col + 0.5f) * blockSize, (row + 0.5f) * blockSize, 0f);
-                GameObject newBlock = Instantiate(prefab, transform.position + position, Quaternion.identity, this.transform);
+                GameObject newBlock = Instantiate(prefab, transform.position + position, Quaternion.identity, transform);
                 newBlock.transform.parent = transform;
                 if (logicalGrid[row][col] == GridCell.Hero)
                 {
                     characterObject = newBlock;
+                }
+                if (logicalGrid[row][col] == GridCell.Enemy)
+                {
+                    newBlock.transform.rotation = Quaternion.Euler(0, 0, 180);
                 }
             }
         }
@@ -221,7 +229,7 @@ public class MapGenerator : MonoBehaviour
 
     void BuildWall(List<List<GridCell>> grid, int row, int col)
     {
-        if(Random.Range(0f, 1f) < glassChance)
+        if(Random.Range(0f, 1f) < glassChanceBoost)
         {
             grid[row][col] = GridCell.Glass;
             return;
