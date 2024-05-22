@@ -14,12 +14,15 @@ public class Bullet : MonoBehaviour
 
     private int collisionsLifeTime = 2;
 
+    private HeroAgent heroAgent;
+
     private void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         rb.gravityScale = 0f;
         Destroy(gameObject, lifeTime);
         rb.velocity = transform.up * speed;
+        heroAgent = FindObjectOfType<HeroAgent>();
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
@@ -33,6 +36,8 @@ public class Bullet : MonoBehaviour
                 break;
             case "Enemy":
                 Destroy(collision.gameObject);
+                heroAgent.AddReward(100.0f);
+                heroAgent.EndEpisode();
                 Destroy(gameObject);
                 break;
             case "Hero":

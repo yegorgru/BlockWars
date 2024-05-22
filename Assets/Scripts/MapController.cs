@@ -5,15 +5,15 @@ using UnityEngine;
 using static Unity.Collections.AllocatorManager;
 using UnityEngine.UIElements;
 using static UnityEngine.Rendering.DebugUI.Table;
+using Unity.VisualScripting;
 
 [System.Serializable]
 public class BlockType
 {
     public GameObject prefab;
-    //public Color color;
 }
 
-enum GridCell
+public enum GridCell
 {
     Empty,
     Hero,
@@ -25,7 +25,7 @@ enum GridCell
     Grass
 }
 
-public class MapGenerator : MonoBehaviour
+public class MapController : MonoBehaviour
 {
     public BlockType[] blockTypes;
     public int rows = 10;
@@ -36,20 +36,22 @@ public class MapGenerator : MonoBehaviour
     public GameObject character;
     public GameObject enemy;
     public GameObject bullet;
-    private int xCoord = 0;
-    private int yCoord = 0;
+    private Vector2Int heroPosition;
+    private Vector2Int enemyPosition;
     private GameObject characterObject;
     private List<List<GridCell>> logicalGrid;
 
     void Start()
     {
-        yCoord = rows / 2;
+        //yCoord = rows / 2;
+        heroPosition.y = rows / 2;
+        enemyPosition.y = rows / 2;
         GenerateGrid();
     }
 
     void Update()
     {
-        int prevXCoord = xCoord;
+        /*int prevXCoord = xCoord;
         int prevYCoord = yCoord;
         if (Input.GetKeyDown(KeyCode.UpArrow) == true)
         {
@@ -87,11 +89,27 @@ public class MapGenerator : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space) == true)
         {
             Instantiate(bullet, characterObject.transform.position, characterObject.transform.rotation * Quaternion.Euler(0, 0, -90));
-        }
+        }*/
+    }
+
+    public void ResetEnvironment()
+    {
+        // Implement logic to reset the environment and the hero's position
+        GenerateGrid();
+    }
+
+    public List<List<GridCell>> GetLogicalGrid()
+    {
+        return logicalGrid;
     }
 
     void GenerateGrid()
     {
+        foreach (Transform child in transform)
+        {
+            Destroy(child.gameObject);
+        }
+
         logicalGrid = GenerateLogicalGrid();
         
         for (int row = 0; row < logicalGrid.Count; row++)
@@ -129,10 +147,12 @@ public class MapGenerator : MonoBehaviour
                 if (logicalGrid[row][col] == GridCell.Hero)
                 {
                     characterObject = newBlock;
+                    heroPosition = new Vector2Int(col, row);
                 }
                 if (logicalGrid[row][col] == GridCell.Enemy)
                 {
                     newBlock.transform.rotation = Quaternion.Euler(0, 0, 180);
+                    enemyPosition = new Vector2Int(col, row);
                 }
             }
         }
@@ -285,5 +305,51 @@ public class MapGenerator : MonoBehaviour
         {
             grid[row][col] = GridCell.Box;
         }
+    }
+
+    public bool MoveHero(Vector2Int newPosition)
+    {
+        int newX = newPosition.x;
+        int newY = newPosition.y;
+
+        if (newX >= 0 && newX < cols && newY >= 0 && newY < rows && logicalGrid[newY][newX] == GridCell.Empty)
+        {
+            logicalGrid[newY][newX] = GridCell.Hero;
+            logicalGrid[heroPosition.y][heroPosition.x] = GridCell.Empty;
+            heroPosition = newPosition;
+            characterObject.transform.position = transform.position + new Vector3((heroPosition.x + 0.5f) * blockSize, (heroPosition.y + 0.5f) * blockSize, 0f);
+            return true;
+        }
+        return false;
+    }
+
+    public Vector2Int GetHeroPosition()
+    {
+        return heroPosition;
+    }
+
+    public Quaternion GetHeroRotation()
+    {
+        return characterObject.transform.rotation;
+    }
+
+    public Vector2Int GetEnemyPosition()
+    {
+        return enemyPosition;
+    }
+
+    public void SetHeroRotation(Quaternion rotation)
+    {
+        characterObject.transform.rotation = rotation;
+    }
+
+    public void HeroShoot()
+    {
+        Instantiate(bullet, characterObject.transform.position, characterObject.transform.rotation * Quaternion.Euler(0, 0, -90));
+    }
+
+    public Vector3 GetCharacterPosition()
+    {
+        return characterObject.transform.position;
     }
 }
