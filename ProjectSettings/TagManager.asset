@@ -8,8 +8,8 @@ TagManager:
   - Wood
   - Grass
   - Glass
-  - Enemy
   - Hero
+  - Target
   layers:
   - Default
   - TransparentFX

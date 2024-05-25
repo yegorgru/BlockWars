@@ -1,11 +1,5 @@
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
-using static Unity.Collections.AllocatorManager;
-using UnityEngine.UIElements;
-using static UnityEngine.Rendering.DebugUI.Table;
-using Unity.VisualScripting;
 
 [System.Serializable]
 public class BlockType
@@ -16,8 +10,8 @@ public class BlockType
 public enum GridCell
 {
     Empty,
-    Hero,
-    Enemy,
+    Agent,
+    Target,
     UninitializedWall,
     Block,
     Box,
@@ -28,79 +22,86 @@ public enum GridCell
 public class MapController : MonoBehaviour
 {
     public BlockType[] blockTypes;
-    public int rows = 10;
-    public int cols = 10;
-    public int paths = 1;
-    public float blockSize = 1f;
-    public float glassChanceBoost = 0.2f;
-    public GameObject character;
-    public GameObject enemy;
+    public GameObject agent;
+    public GameObject hero;
+    public GameObject target;
     public GameObject bullet;
-    private Vector2Int heroPosition;
-    private Vector2Int enemyPosition;
-    private GameObject characterObject;
-    private List<List<GridCell>> logicalGrid;
+    public bool moveHero = true;
+
+    private int mRows = 15;
+    private int mCols = 32;
+    private float mBlockSize = 0.665f;
+    private Vector2Int mAgentPosition;
+    private Vector2Int mHeroPosition;
+    private Vector2Int mTargetPosition;
+    private GameObject mAgentObject;
+    private GameObject mHeroObject;
+    private List<List<GridCell>> mLogicalGrid;
+    private int mPathsCount = 1;
+
+    private float mLastShoot = 0f;
+    private float mShootCoolDown = 0.2f;
 
     void Start()
     {
-        //yCoord = rows / 2;
-        heroPosition.y = rows / 2;
-        enemyPosition.y = rows / 2;
+        mAgentPosition.y = mRows / 2;
+        mTargetPosition.y = mRows / 2;
         GenerateGrid();
     }
 
-    void Update()
+    void FixedUpdate()
     {
-        /*int prevXCoord = xCoord;
-        int prevYCoord = yCoord;
-        if (Input.GetKeyDown(KeyCode.UpArrow) == true)
+        if(moveHero)
         {
-            ++yCoord;
-        }
-        if (Input.GetKeyDown(KeyCode.DownArrow) == true)
-        {
-            --yCoord;
-        }
-        if (Input.GetKeyDown(KeyCode.LeftArrow) == true)
-        {
-            --xCoord;
-        }
-        if (Input.GetKeyDown(KeyCode.RightArrow) == true)
-        {
-            ++xCoord;
-        }
-        if (!(xCoord >= 0 && xCoord < cols && yCoord >= 0 && yCoord < rows && logicalGrid[yCoord][xCoord] == GridCell.Empty))
-        {
-            xCoord = prevXCoord;
-            yCoord = prevYCoord;
+            float currentTime = Time.time;
+            if (currentTime - mLastShoot < mShootCoolDown)
+            {
+                return;
+            }
+            mHeroObject.SetActive(true);
+            Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            mousePos.z = 0f;
+            Vector3 direction = mousePos - mHeroObject.transform.position;
+            float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+            Quaternion rotation = Quaternion.AngleAxis(angle, Vector3.forward);
+            mHeroObject.transform.rotation = rotation;
+            if (Input.GetKey(KeyCode.UpArrow))
+            {
+                MoveHero(Vector2Int.up);
+            }
+            else if (Input.GetKey(KeyCode.DownArrow))
+            {
+                MoveHero(Vector2Int.down);
+            }
+            else if (Input.GetKey(KeyCode.RightArrow))
+            {
+                MoveHero(Vector2Int.right);
+            }
+            else if (Input.GetKey(KeyCode.LeftArrow))
+            {
+                MoveHero(Vector2Int.left);
+            }
+            else if (Input.GetKey(KeyCode.Space))
+            {
+                HeroShoot();
+            }
+            mLastShoot = currentTime;
         }
         else
         {
-            logicalGrid[yCoord][xCoord] = GridCell.Hero;
-            logicalGrid[prevYCoord][prevXCoord] = GridCell.Empty;
-            characterObject.transform.position = transform.position + new Vector3((xCoord + 0.5f) * blockSize, (yCoord + 0.5f) * blockSize, 0f);
+            mHeroObject.SetActive(false);
         }
-        Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        mousePos.z = 0f;
-        Vector3 direction = mousePos - characterObject.transform.position;
-        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-        Quaternion rotation = Quaternion.AngleAxis(angle, Vector3.forward);
-        characterObject.transform.rotation = rotation;
-        if (Input.GetKeyDown(KeyCode.Space) == true)
-        {
-            Instantiate(bullet, characterObject.transform.position, characterObject.transform.rotation * Quaternion.Euler(0, 0, -90));
-        }*/
     }
 
     public void ResetEnvironment()
     {
-        // Implement logic to reset the environment and the hero's position
+        mPathsCount = Random.Range(1, 8);
         GenerateGrid();
     }
 
     public List<List<GridCell>> GetLogicalGrid()
     {
-        return logicalGrid;
+        return mLogicalGrid;
     }
 
     void GenerateGrid()
@@ -110,49 +111,53 @@ public class MapController : MonoBehaviour
             Destroy(child.gameObject);
         }
 
-        logicalGrid = GenerateLogicalGrid();
+        mLogicalGrid = GenerateLogicalGrid();
         
-        for (int row = 0; row < logicalGrid.Count; row++)
+        for (int row = 0; row < mLogicalGrid.Count; row++)
         {
-            for (int col = 0; col < logicalGrid[0].Count; col++)
+            for (int col = 0; col < mLogicalGrid[0].Count; col++)
             {
-                if(logicalGrid[row][col] == GridCell.Empty)
+                if(mLogicalGrid[row][col] == GridCell.Empty)
                 {
                     continue;
                 }
-                GameObject prefab = character;
-                if (logicalGrid[row][col] == GridCell.Block)
+                GameObject prefab = agent;
+                if (mLogicalGrid[row][col] == GridCell.Block)
                 {
                     prefab = blockTypes[0].prefab;
                 }
-                else if (logicalGrid[row][col] == GridCell.Box)
+                else if (mLogicalGrid[row][col] == GridCell.Box)
                 {
                     prefab = blockTypes[1].prefab;
                 }
-                else if (logicalGrid[row][col] == GridCell.Glass)
+                else if (mLogicalGrid[row][col] == GridCell.Glass)
                 {
                     prefab = blockTypes[2].prefab;
                 }
-                else if (logicalGrid[row][col] == GridCell.Grass)
+                else if (mLogicalGrid[row][col] == GridCell.Grass)
                 {
                     prefab = blockTypes[3].prefab;
                 }
-                else if (logicalGrid[row][col] == GridCell.Enemy)
+                else if (mLogicalGrid[row][col] == GridCell.Target)
                 {
-                    prefab = enemy;
+                    prefab = target;
                 }
-                Vector3 position = new Vector3((col + 0.5f) * blockSize, (row + 0.5f) * blockSize, 0f);
+                Vector3 position = new Vector3((col + 0.5f) * mBlockSize, (row + 0.5f) * mBlockSize, 0f);
                 GameObject newBlock = Instantiate(prefab, transform.position + position, Quaternion.identity, transform);
                 newBlock.transform.parent = transform;
-                if (logicalGrid[row][col] == GridCell.Hero)
+                if (mLogicalGrid[row][col] == GridCell.Agent)
                 {
-                    characterObject = newBlock;
-                    heroPosition = new Vector2Int(col, row);
+                    mAgentObject = newBlock;
+                    mAgentPosition = new Vector2Int(col, row);
+
+                    GameObject heroBlock = Instantiate(hero, transform.position + position, Quaternion.identity, transform);
+                    heroBlock.transform.parent = transform;
+                    mHeroObject = heroBlock;
+                    mHeroPosition = new Vector2Int(col, row);
                 }
-                if (logicalGrid[row][col] == GridCell.Enemy)
+                if (mLogicalGrid[row][col] == GridCell.Target)
                 {
-                    newBlock.transform.rotation = Quaternion.Euler(0, 0, 180);
-                    enemyPosition = new Vector2Int(col, row);
+                    mTargetPosition = new Vector2Int(col, row);
                 }
             }
         }
@@ -162,25 +167,39 @@ public class MapController : MonoBehaviour
     {
         List<List<GridCell>> result = new List<List<GridCell>>();
 
-        for (int i = 0; i < rows; i++)
+        for (int i = 0; i < mRows; i++)
         {
             result.Add(new List<GridCell>());
-            for (int j = 0; j < cols; j++)
+            for (int j = 0; j < mCols; j++)
             {
                 result[i].Add(GridCell.UninitializedWall);
             }
         }
         BuildPaths(result);
         BuildWalls(result);
-        result[rows / 2][0] = GridCell.Hero;
-        result[rows / 2][cols - 1] = GridCell.Enemy;
+        result[mRows / 2][0] = GridCell.Agent;
+        PlaceTarget(result);
         return result;
+    }
+
+    void PlaceTarget(List<List<GridCell>> grid)
+    {
+        int col = Random.Range(mCols/2, mCols);
+        int path = Random.Range(0, mPathsCount);
+        int pathCounter = 0;
+        for(int i = 0; i < mRows; ++i)
+        {
+            if (grid[i][col] == GridCell.Empty && pathCounter++ == path)
+            {
+                grid[i][col] = GridCell.Target;
+            }
+        }
     }
 
     void BuildPaths(List<List<GridCell>> grid)
     {
         BuildPath(grid, true);
-        for (int i = 1; i < paths; ++i)
+        for (int i = 1; i < mPathsCount; ++i)
         {
             BuildPath(grid, false);
         }
@@ -188,9 +207,9 @@ public class MapController : MonoBehaviour
 
     void BuildWalls(List<List<GridCell>> grid)
     {
-        for (int i = 0; i < rows; i++)
+        for (int i = 0; i < mRows; i++)
         {
-            for (int j = 0; j < cols; j++)
+            for (int j = 0; j < mCols; j++)
             {
                 if(grid[i][j] == GridCell.UninitializedWall)
                 {
@@ -202,8 +221,8 @@ public class MapController : MonoBehaviour
 
     void BuildPath(List<List<GridCell>> grid, bool toCenter)
     {
-        int y = toCenter ? rows / 2 : Random.Range(0, rows);
-        for(int x = 0; x < cols;)
+        int y = toCenter ? mRows / 2 : Random.Range(0, mRows);
+        for(int x = 0; x < mCols;)
         {
             while(true)
             {
@@ -227,9 +246,9 @@ public class MapController : MonoBehaviour
                 else
                 {
                     ++y;
-                    if (y > rows - 1)
+                    if (y > mRows - 1)
                     {
-                        y = rows - 1;
+                        y = mRows - 1;
                         ++x;
                         break;
                     }
@@ -238,31 +257,26 @@ public class MapController : MonoBehaviour
         }
         if(toCenter)
         {
-            int minY = Mathf.Min(y, rows / 2);
-            int maxY = Mathf.Max(y, rows / 2);
+            int minY = Mathf.Min(y, mRows / 2);
+            int maxY = Mathf.Max(y, mRows / 2);
             for(int i = minY; i < maxY; ++i)
             {
-                grid[i][cols - 1] = GridCell.Empty;
+                grid[i][mCols - 1] = GridCell.Empty;
             }
         }
     }
 
     void BuildWall(List<List<GridCell>> grid, int row, int col)
     {
-        if(Random.Range(0f, 1f) < glassChanceBoost)
-        {
-            grid[row][col] = GridCell.Glass;
-            return;
-        }
         float blockValue = Random.Range(0f, 4f);
         int neighborsCount = 0;
         float neighborsValue = 0f;
-        for(int i = row > 0 ? row - 1 : 0; i < (row < rows - 1 ? row + 1 : rows - 1); ++i)
+        for(int i = row > 0 ? row - 1 : 0; i < (row < mRows - 1 ? row + 1 : mRows - 1); ++i)
         {
-            for (int j = col > 0 ? col - 1 : 0; j < (col < cols - 1 ? col + 1 : cols - 1); ++j)
+            for (int j = col > 0 ? col - 1 : 0; j < (col < mCols - 1 ? col + 1 : mCols - 1); ++j)
             {
                 if (grid[i][j] == GridCell.UninitializedWall || grid[i][j] == GridCell.Empty ||
-                    grid[i][j] == GridCell.Hero || grid[i][j] == GridCell.Enemy)
+                    grid[i][j] == GridCell.Agent || grid[i][j] == GridCell.Target)
                 {
                     continue;
                 }
@@ -307,49 +321,69 @@ public class MapController : MonoBehaviour
         }
     }
 
-    public bool MoveHero(Vector2Int newPosition)
+    public bool MoveAgent(Vector2Int newPosition)
     {
         int newX = newPosition.x;
         int newY = newPosition.y;
 
-        if (newX >= 0 && newX < cols && newY >= 0 && newY < rows && logicalGrid[newY][newX] == GridCell.Empty)
+        if (newX >= 0 && newX < mCols && newY >= 0 && newY < mRows && mLogicalGrid[newY][newX] == GridCell.Empty)
         {
-            logicalGrid[newY][newX] = GridCell.Hero;
-            logicalGrid[heroPosition.y][heroPosition.x] = GridCell.Empty;
-            heroPosition = newPosition;
-            characterObject.transform.position = transform.position + new Vector3((heroPosition.x + 0.5f) * blockSize, (heroPosition.y + 0.5f) * blockSize, 0f);
+            mLogicalGrid[newY][newX] = GridCell.Agent;
+            mLogicalGrid[mAgentPosition.y][mAgentPosition.x] = GridCell.Empty;
+            mAgentPosition = newPosition;
+            mAgentObject.transform.position = transform.position + new Vector3((mAgentPosition.x + 0.5f) * mBlockSize, (mAgentPosition.y + 0.5f) * mBlockSize, 0f);
             return true;
         }
         return false;
     }
 
-    public Vector2Int GetHeroPosition()
+    public bool MoveHero(Vector2Int newPosition)
     {
-        return heroPosition;
+        newPosition += mHeroPosition;
+        int newX = newPosition.x;
+        int newY = newPosition.y;
+
+        if (newX >= 0 && newX < mCols && newY >= 0 && newY < mRows && (mLogicalGrid[newY][newX] == GridCell.Empty || mLogicalGrid[newY][newX] == GridCell.Agent))
+        {
+            mHeroPosition = newPosition;
+            mHeroObject.transform.position = transform.position + new Vector3((mHeroPosition.x + 0.5f) * mBlockSize, (mHeroPosition.y + 0.5f) * mBlockSize, 0f);
+            return true;
+        }
+        return false;
     }
 
-    public Quaternion GetHeroRotation()
+    public Vector2Int GetAgentPosition()
     {
-        return characterObject.transform.rotation;
+        return mAgentPosition;
     }
 
-    public Vector2Int GetEnemyPosition()
+    public Quaternion GetAgentRotation()
     {
-        return enemyPosition;
+        return mAgentObject.transform.rotation;
     }
 
-    public void SetHeroRotation(Quaternion rotation)
+    public Vector2Int GetTargetPosition()
     {
-        characterObject.transform.rotation = rotation;
+        return mTargetPosition;
+    }
+
+    public void SetAgentRotation(Quaternion rotation)
+    {
+        mAgentObject.transform.rotation = rotation;
+    }
+
+    public void AgentShoot()
+    {
+        Instantiate(bullet, mAgentObject.transform.position, mAgentObject.transform.rotation * Quaternion.Euler(0, 0, -90));
     }
 
     public void HeroShoot()
     {
-        Instantiate(bullet, characterObject.transform.position, characterObject.transform.rotation * Quaternion.Euler(0, 0, -90));
+        Instantiate(bullet, mHeroObject.transform.position, mHeroObject.transform.rotation * Quaternion.Euler(0, 0, -90));
     }
 
-    public Vector3 GetCharacterPosition()
+    public Vector3 GetAgentPositionV3()
     {
-        return characterObject.transform.position;
+        return mAgentObject.transform.position;
     }
 }
