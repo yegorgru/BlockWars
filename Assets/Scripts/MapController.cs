@@ -200,12 +200,12 @@ public class MapController : MonoBehaviour
     private void ConnectPaths(List<List<GridCell>> grid)
     {
         int upRow = 0;
-        while (grid[upRow][0] != GridCell.Empty)
+        while (grid[upRow][0] != GridCell.Empty && grid[upRow][0] != GridCell.Agent)
         {
             upRow++;
         }
         int downRow = mRows - 1;
-        while (grid[downRow][0] != GridCell.Empty)
+        while (grid[downRow][0] != GridCell.Empty && grid[downRow][0] != GridCell.Agent)
         {
             downRow--;
         }
