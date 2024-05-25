@@ -179,6 +179,7 @@ public class MapController : MonoBehaviour
         BuildWalls(result);
         result[mRows / 2][0] = GridCell.Agent;
         PlaceTarget(result);
+        ConnectPaths(result);
         return result;
     }
 
@@ -192,6 +193,26 @@ public class MapController : MonoBehaviour
             if (grid[i][col] == GridCell.Empty && pathCounter++ == path)
             {
                 grid[i][col] = GridCell.Target;
+            }
+        }
+    }
+
+    private void ConnectPaths(List<List<GridCell>> grid)
+    {
+        int upRow = 0;
+        while (grid[upRow][0] != GridCell.Empty)
+        {
+            upRow++;
+        }
+        int downRow = mRows - 1;
+        while (grid[downRow][0] != GridCell.Empty)
+        {
+            downRow--;
+        }
+        for(int i = upRow + 1; i < downRow; ++i) {
+            if(grid[i][0] != GridCell.Agent)
+            {
+                grid[i][0] = GridCell.Empty;
             }
         }
     }
