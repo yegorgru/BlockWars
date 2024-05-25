@@ -164,7 +164,7 @@ MonoBehaviour:
   hero: {fileID: 4053236618638973016, guid: ac5a0cf7b1f5bd2418d8a4a4a4767318, type: 3}
   target: {fileID: 4979991030679263556, guid: b61ffa658e3a2874e827ab38f4415da2, type: 3}
   bullet: {fileID: 7655854846278513336, guid: c726ea1daea0ec049b94a7da47c0a91e, type: 3}
-  moveHero: 1
+  moveHero: 0
 --- !u!4 &133934946
 Transform:
   m_ObjectHideFlags: 0
@@ -213,8 +213,8 @@ MonoBehaviour:
     NumStackedVectorObservations: 4
     m_ActionSpec:
       m_NumContinuousActions: 0
-      BranchSizes: 5a00000006000000
-    VectorActionSize: 5a00000006000000
+      BranchSizes: 0500000006000000
+    VectorActionSize: 0500000006000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
     hasUpgradedBrainParametersWithActionSpec: 1

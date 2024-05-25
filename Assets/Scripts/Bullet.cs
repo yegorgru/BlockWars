@@ -36,8 +36,8 @@ public class Bullet : MonoBehaviour
                 break;
             case "Target":
                 Destroy(collision.gameObject);
-                heroAgent.AddReward(25.0f);
-                heroAgent.AddReward((float)heroAgent.MaxStep / heroAgent.StepCount * 2);
+                heroAgent.AddReward(75.0f);
+                heroAgent.AddReward((float)heroAgent.MaxStep / heroAgent.StepCount * 6);
                 heroAgent.EndEpisode();
                 Destroy(gameObject);
                 break;

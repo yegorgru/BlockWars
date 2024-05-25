@@ -34,7 +34,7 @@ public class HeroAgent : Agent
 
     public override void OnActionReceived(ActionBuffers actions)
     {
-        int rotation = actions.DiscreteActions[0];
+        float rotation = actions.DiscreteActions[0] * 22.5f;
         mapController.SetAgentRotation(mapController.GetAgentRotation() * Quaternion.Euler(0, 0, rotation - 45));
 
         int action = actions.DiscreteActions[1];
@@ -81,7 +81,7 @@ public class HeroAgent : Agent
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
         float prev = mapController.GetAgentRotation().eulerAngles.z;
 
-        discreteActionsOut[0] = Mathf.RoundToInt(Mathf.Clamp(Mathf.DeltaAngle(prev, angle) + 45f, 0f, 90f));
+        discreteActionsOut[0] = Mathf.RoundToInt(Mathf.Clamp(Mathf.DeltaAngle(prev, angle) + 45f, 0f, 90f) / 22.5f);
 
         if (Input.GetKey(KeyCode.UpArrow))
         {

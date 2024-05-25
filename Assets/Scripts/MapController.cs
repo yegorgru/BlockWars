@@ -179,7 +179,8 @@ public class MapController : MonoBehaviour
         BuildWalls(result);
         result[mRows / 2][0] = GridCell.Agent;
         PlaceTarget(result);
-        ConnectPaths(result);
+        ConnectPaths(result, 0);
+        ConnectPaths(result, mCols - 1);
         return result;
     }
 
@@ -197,22 +198,22 @@ public class MapController : MonoBehaviour
         }
     }
 
-    private void ConnectPaths(List<List<GridCell>> grid)
+    private void ConnectPaths(List<List<GridCell>> grid, int col)
     {
         int upRow = 0;
-        while (grid[upRow][0] != GridCell.Empty && grid[upRow][0] != GridCell.Agent)
+        while (grid[upRow][col] != GridCell.Empty && grid[upRow][col] != GridCell.Agent && grid[upRow][col] != GridCell.Target)
         {
             upRow++;
         }
         int downRow = mRows - 1;
-        while (grid[downRow][0] != GridCell.Empty && grid[downRow][0] != GridCell.Agent)
+        while (grid[downRow][col] != GridCell.Empty && grid[downRow][col] != GridCell.Agent && grid[downRow][col] != GridCell.Target)
         {
             downRow--;
         }
         for(int i = upRow + 1; i < downRow; ++i) {
-            if(grid[i][0] != GridCell.Agent)
+            if(grid[i][col] != GridCell.Agent && grid[i][col] != GridCell.Target)
             {
-                grid[i][0] = GridCell.Empty;
+                grid[i][col] = GridCell.Empty;
             }
         }
     }
