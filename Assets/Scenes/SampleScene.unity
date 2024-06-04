@@ -164,6 +164,7 @@ MonoBehaviour:
   hero: {fileID: 4053236618638973016, guid: ac5a0cf7b1f5bd2418d8a4a4a4767318, type: 3}
   target: {fileID: 4979991030679263556, guid: b61ffa658e3a2874e827ab38f4415da2, type: 3}
   bullet: {fileID: 7655854846278513336, guid: c726ea1daea0ec049b94a7da47c0a91e, type: 3}
+  agentBullet: {fileID: 1908176832748074593, guid: a9f026083aa3d324d8c131eacd37f05d, type: 3}
   moveHero: 0
 --- !u!4 &133934946
 Transform:
@@ -195,7 +196,7 @@ MonoBehaviour:
   agentParameters:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
-  MaxStep: 15000
+  MaxStep: 10000
 --- !u!114 &133934948
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -209,17 +210,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 480
-    NumStackedVectorObservations: 4
+    VectorObservationSize: 483
+    NumStackedVectorObservations: 10
     m_ActionSpec:
       m_NumContinuousActions: 0
-      BranchSizes: 0500000006000000
-    VectorActionSize: 0500000006000000
+      BranchSizes: 0a000000
+    VectorActionSize: 0a000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
     hasUpgradedBrainParametersWithActionSpec: 1
   m_Model: {fileID: 0}
-  m_InferenceDevice: 0
+  m_InferenceDevice: 1
   m_BehaviorType: 0
   m_BehaviorName: MapController
   TeamId: 0

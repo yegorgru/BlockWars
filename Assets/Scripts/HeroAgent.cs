@@ -7,7 +7,7 @@ using System.Collections.Generic;
 public class HeroAgent : Agent
 {
     private MapController mapController;
-    private float minDistanceToTarget = 1000f;
+    private float minDistanceToTarget;
 
     public override void Initialize()
     {
@@ -16,6 +16,7 @@ public class HeroAgent : Agent
 
     public override void OnEpisodeBegin()
     {
+        minDistanceToTarget = 1000f;
         mapController.ResetEnvironment();
     }
 
@@ -30,82 +31,82 @@ public class HeroAgent : Agent
                 sensor.AddObservation((int)cell);
             }
         }
+
+        sensor.AddObservation(mapController.GetAgentPositionV3());
     }
 
     public override void OnActionReceived(ActionBuffers actions)
     {
-        float rotation = actions.DiscreteActions[0] * 22.5f;
-        mapController.SetAgentRotation(mapController.GetAgentRotation() * Quaternion.Euler(0, 0, rotation - 45));
-
-        int action = actions.DiscreteActions[1];
-        switch (action)
+        int action = actions.DiscreteActions[0];
+        if(action < 5) {
+            switch (action)
+            {
+                case 0:
+                    mapController.AgentShoot();
+                    break;
+                case 1:
+                    MoveAgent(Vector2Int.up);
+                    break;
+                case 2:
+                    MoveAgent(Vector2Int.down);
+                    break;
+                case 3:
+                    MoveAgent(Vector2Int.right);
+                    break;
+                case 4:
+                    MoveAgent(Vector2Int.left);
+                    break;
+            }
+        }
+        else
         {
-            case 0:
-                break;
-            case 1:
-                MoveAgent(Vector2Int.up);
-                break;
-            case 2:
-                MoveAgent(Vector2Int.down);
-                break;
-            case 3:
-                MoveAgent(Vector2Int.right);
-                break;
-            case 4:
-                MoveAgent(Vector2Int.left);
-                break;
-            case 5:
-                mapController.AgentShoot();
-                break;
+            float rotation = (actions.DiscreteActions[0] - 5) * 22.5f;
+            mapController.SetAgentRotation(mapController.GetAgentRotation() * Quaternion.Euler(0, 0, rotation - 45));
         }
 
         float newDistanceToTarget = CalculateDistanceToTarget();
         if(minDistanceToTarget > newDistanceToTarget)
         {
             minDistanceToTarget = newDistanceToTarget;
-            AddReward(0.1f);
+            AddReward(0.2f);
         }
 
-        Debug.Log($"Distance to enemy: {newDistanceToTarget}, Cumulative Reward: {GetCumulativeReward()}");
-
-        AddReward(-0.01f);
+        AddReward(-0.001f);
     }
 
     public override void Heuristic(in ActionBuffers actionsOut)
     {
         var discreteActionsOut = actionsOut.DiscreteActions;
 
-        Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        mousePos.z = 0f;
-        Vector3 direction = mousePos - mapController.GetAgentPositionV3();
-        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-        float prev = mapController.GetAgentRotation().eulerAngles.z;
-
-        discreteActionsOut[0] = Mathf.RoundToInt(Mathf.Clamp(Mathf.DeltaAngle(prev, angle) + 45f, 0f, 90f) / 22.5f);
-
         if (Input.GetKey(KeyCode.UpArrow))
         {
-            discreteActionsOut[1] = 1;
+            discreteActionsOut[0] = 1;
         }
         else if (Input.GetKey(KeyCode.DownArrow))
         {
-            discreteActionsOut[1] = 2;
+            discreteActionsOut[0] = 2;
         }
         else if (Input.GetKey(KeyCode.RightArrow))
         {
-            discreteActionsOut[1] = 3;
+            discreteActionsOut[0] = 3;
         }
         else if (Input.GetKey(KeyCode.LeftArrow))
         {
-            discreteActionsOut[1] = 4;
+            discreteActionsOut[0] = 4;
         }
         else if (Input.GetKey(KeyCode.Space))
         {
-            discreteActionsOut[1] = 5;
+            discreteActionsOut[0] = 0;
         }
         else
         {
-            discreteActionsOut[1] = 0;
+            Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            mousePos.z = 0f;
+            Vector3 direction = mousePos - mapController.GetAgentPositionV3();
+            float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+            float prev = mapController.GetAgentRotation().eulerAngles.z;
+
+            discreteActionsOut[0] = 5 + Mathf.RoundToInt(Mathf.Clamp(Mathf.DeltaAngle(prev, angle) + 45f, 0f, 90f) / 22.5f);
         }
     }
 
@@ -114,7 +115,7 @@ public class HeroAgent : Agent
         Vector2Int newHeroPosition = mapController.GetAgentPosition() + direction;
         if (!mapController.MoveAgent(newHeroPosition))
         {
-            AddReward(-0.03f);
+            AddReward(-0.05f);
         }
     }
 

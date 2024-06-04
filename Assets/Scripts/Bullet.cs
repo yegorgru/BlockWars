@@ -16,8 +16,11 @@ public class Bullet : MonoBehaviour
 
     private HeroAgent heroAgent;
 
+    private MapController mapController;
+
     private void Start()
     {
+        mapController = FindObjectOfType<MapController>();
         rb = GetComponent<Rigidbody2D>();
         rb.gravityScale = 0f;
         Destroy(gameObject, lifeTime);
@@ -31,15 +34,16 @@ public class Bullet : MonoBehaviour
         switch (collision.gameObject.tag)
         {
             case "Wood":
-                Destroy(collision.gameObject);
                 Destroy(gameObject);
+                mapController.DestroyBox(collision.gameObject);
                 break;
             case "Target":
                 Destroy(collision.gameObject);
-                heroAgent.AddReward(75.0f);
-                heroAgent.AddReward((float)heroAgent.MaxStep / heroAgent.StepCount * 6);
-                heroAgent.EndEpisode();
                 Destroy(gameObject);
+                heroAgent.AddReward(15.0f);
+                heroAgent.AddReward((float)(heroAgent.MaxStep - heroAgent.StepCount) / 1000);
+
+                heroAgent.EndEpisode();
                 break;
             case "Hero":
                 Destroy(collision.gameObject);

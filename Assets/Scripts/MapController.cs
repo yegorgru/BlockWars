@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using static UnityEngine.Rendering.DebugUI.Table;
 
 [System.Serializable]
 public class BlockType
@@ -26,6 +27,7 @@ public class MapController : MonoBehaviour
     public GameObject hero;
     public GameObject target;
     public GameObject bullet;
+    public GameObject agentBullet;
     public bool moveHero = true;
 
     private int mRows = 15;
@@ -44,8 +46,6 @@ public class MapController : MonoBehaviour
 
     void Start()
     {
-        mAgentPosition.y = mRows / 2;
-        mTargetPosition.y = mRows / 2;
         GenerateGrid();
     }
 
@@ -178,15 +178,15 @@ public class MapController : MonoBehaviour
         BuildPaths(result);
         BuildWalls(result);
         result[mRows / 2][0] = GridCell.Agent;
-        PlaceTarget(result);
         ConnectPaths(result, 0);
         ConnectPaths(result, mCols - 1);
+        PlaceTarget(result);
         return result;
     }
 
     void PlaceTarget(List<List<GridCell>> grid)
     {
-        int col = Random.Range(mCols/2, mCols);
+        int col = Random.Range(Mathf.RoundToInt(mCols * 0.75f), mCols);
         int path = Random.Range(0, mPathsCount);
         int pathCounter = 0;
         for(int i = 0; i < mRows; ++i)
@@ -396,7 +396,7 @@ public class MapController : MonoBehaviour
 
     public void AgentShoot()
     {
-        Instantiate(bullet, mAgentObject.transform.position, mAgentObject.transform.rotation * Quaternion.Euler(0, 0, -90));
+        Instantiate(agentBullet, mAgentObject.transform.position, mAgentObject.transform.rotation * Quaternion.Euler(0, 0, -90));
     }
 
     public void HeroShoot()
@@ -407,5 +407,14 @@ public class MapController : MonoBehaviour
     public Vector3 GetAgentPositionV3()
     {
         return mAgentObject.transform.position;
+    }
+
+    public void DestroyBox(GameObject obj)
+    {
+        Vector3 pos = obj.transform.position - transform.position;
+        int col = Mathf.RoundToInt((pos.x / mBlockSize) - 0.5f);
+        int row = Mathf.RoundToInt((pos.y / mBlockSize) - 0.5f);
+        mLogicalGrid[row][col] = GridCell.Empty;
+        Destroy(obj);
     }
 }
